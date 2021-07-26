@@ -20,12 +20,16 @@
                         />
                     </div>
                     <div class="label-input">
-                        <label class="label">密码</label>
+                        <label class="label">验证码</label>
                         <Field
                             :type="inputTypeCon"
-                            placeholder="输入8-16位英文与字母构成的密码"
+                            placeholder="请输入短信验证码"
                             v-model="valuePwd"
-                        />
+                        >
+                            <template #button>
+                                <Button size="small" color="linear-gradient(45deg, #313635 0%, #888 100%)" type="primary">发送验证码</Button>
+                            </template>
+                        </Field>
                     </div>
                     <router-link to="/password-reset" class="forgotPwd">忘记密码?</router-link>
                 </div>
@@ -50,6 +54,7 @@
 <script>
 import { Button, Field, Checkbox } from 'vant'
 import AV from 'leancloud-storage'
+import callApi, { requestSmsCode } from '@/services'
 
 export default {
     name: 'Login',
@@ -64,7 +69,9 @@ export default {
             eyeCon: true,
             loginLoading: false,
             valuePwd: '',
-            checked: false
+            checked: false,
+            codeBtnLoading: false,
+            countdown: 0
         }
     },
     computed: {
@@ -82,6 +89,15 @@ export default {
     mounted () {
     },
     methods: {
+        startCountdown () {
+            this.countdown = 60
+            const timer = setInterval(() => {
+                this.countdown--
+                if (this.countdown <= 0) {
+                    clearInterval(timer)
+                }
+            }, 1000)
+        },
         async submitButton () {
             const password = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$/
             if (!this.checked) {
@@ -100,6 +116,18 @@ export default {
                 })
                 this.loginLoading = false
             } else this.$toast('密码格式为8-16位包含字母及数字')
+        },
+        async onGetSmsCode () {
+            try {
+                this.codeBtnLoading = true
+                await callApi(requestSmsCode, this.username)
+                this.startCountdown()
+                this.$toast('短信验证码已发送')
+            } catch (e) {
+                this.$toast(e)
+            } finally {
+                this.codeBtnLoading = false
+            }
         }
     }
 }

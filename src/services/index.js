@@ -34,6 +34,34 @@ export default function callApi (api, ...parameters) {
 }
 
 /**
+ * 获取短信验证码
+ * @param phoneNumber required
+ * @returns {Promise<void>}
+ */
+export async function requestSmsCode (phoneNumber) {
+    if (!phoneNumber) {
+        const error = {
+            code: -1,
+            message: '手机号码不能为空'
+        }
+        throw error
+    }
+    if (!PHONE_EXP.test(phoneNumber)) {
+        const error = {
+            code: -1,
+            message: '手机号码格式不正确(6到18位字母和数字)'
+        }
+        throw error
+    }
+    const response = await AV.Cloud.requestSmsCode({
+        mobilePhoneNumber: phoneNumber,
+        template: 'login'
+        // sign: 'yixiangtong'
+    })
+    return response
+}
+
+/**
  * 注册
  * @param phoneNumber required
  * @param smsCode required
